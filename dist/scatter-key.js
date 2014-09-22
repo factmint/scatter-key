@@ -1,71 +1,87 @@
 define(['snap', 'config', 'color-utils'],
 function(Snap,   Config,   Color) {
-	return Snap.plugin(function(Snap, Element, Paper) {
-		/**
-		 * Plugin to draw a key for a scatter graph, including the ability
-		 * to display lines of best fit.
-		 * @param {Number} x
-		 * @param {Number} y
-		 * @param {Number} width
-		 * @param {Array} data
-		 * @param {Number} maxEntries
-		 */
-		Paper.prototype.scatterKey = function(x, y, width, data, maxEntries) {
+	/**
+	 * Represents a key
+	 * @constructor
+	 * @param {Snap} paper
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} width
+	 * @param {Number} columns
+	 * @param {Number} columnWidth
+	 * @param {String} alignment
+	 * @param {Array.<string>} values
+	 * @param {Number} maxValues
+	 */
+	var Key = function(paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength) {
+		this._paper = paper;
+		this.node = paper.g();
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.columns = columns;
+		this.columnWidth = columnWidth;
+		this.centerItems = centerItems;
+		this.values = values;
+		this.maxValues = maxValues;
+		this.maxValueLength = maxValueLength;
+	}
 
-			if (typeof maxEntries === 'undefined' ||
-				maxEntries > data.length) {
-				maxEntries = data.length;
+	Key.prototype = {
+		"constructor": Key,
+		"hide": function() {},
+		"remove": function() {
+			this.node.parent.remove(this.node);
+			this.node = null;
+		},
+		"render": function() {
+			var numberOfValues = this.values.length;
+
+			if (typeof this.maxEntries === 'undefined' ||
+				this.maxEntries > numberOfValues) {
+				this.maxEntries = numberOfValues;
 			}
-
-			var colorClasses = Color.harmonious(data.length);
-
-			var container = this.rect(x, y, width, 0)
+			
+			if (typeof this.maxValueLength === 'undefined') {
+				this.maxValueLength = Config.KEY_MAX_TEXT_LENGTH;
+			}
+			
+			var colorClasses = Color.harmonious(numberOfValues)
+			
+			this.container = this.node.rect(this.x, this.y, this.width, 10)
 				.addClass('fm-key-container')
 				.attr({
 					fill: Config.KEY_NEUTRAL_FILL,
 					stroke: Config.KEY_NEUTRAL_STROKE
 				});
 
-			var items = this.g();
+			var items = this.node.g().addClass('fm-key-items');
 
 			var columnOffset = 0;
 			var rowOffset = 0;
 
-			function showFullText() {
+			var title;
+			this.values.forEach(function(value, valueIndex) {
+				var keyColor = colorClasses[valueIndex];
 
-			}
-
-			function hideFullText() {
-
-			}
-
-			for (var i = 0; i < maxEntries; i++) {
-				var keyColor;
-				
-				if(i !== 0 && i % Config.KEY_COLUMNS === 0) {
+				if (valueIndex !== 0 && valueIndex % this.columns === 0) {
 					columnOffset = 0;
 					rowOffset += title.getBBox().height + Config.KEY_ROWSPACING;
 				}
 
-				if (data[i].hasOwnProperty('overflow')) {
-					keyColor = Color.overflowClass;
-				} else {
-					keyColor = colorClasses[i];
-				}
-
 				var truncated = false;
-				if (data[i].length > Config.KEY_MAX_TEXT_LENGTH) {
-					var labelText = data[i].substring(0, Config.KEY_MAX_TEXT_LENGTH) + '...';
+				if (value.length > this.maxValueLength) {
+					var labelText = value.substring(0, this.maxValueLength - 3) + '...';
 					truncated = true;
 				} else {
-					var labelText = data[i];
+					var labelText = value;
 				}
 
-				var colorRect = this.rect(x + Config.KEY_PADDING * width + columnOffset, y + Config.KEY_PADDING * width + rowOffset, 13, 13)
+				var colorRect = this.node.rect(this.x + columnOffset, this.y + Config.KEY_PADDING + rowOffset, 13, 13)
 					.addClass(keyColor);
-				var title = this.text(
-					x + Config.KEY_PADDING * width * Config.KEY_TEXT_SPACING + colorRect.getBBox().width + columnOffset,
-					y + Config.KEY_PADDING * width + rowOffset + parseInt(colorRect.attr('height'), 10) - 1,
+				title = this.node.text(
+					this.x + Config.KEY_TEXT_SPACING + colorRect.getBBox().width + columnOffset,
+					this.y + Config.KEY_PADDING + rowOffset + parseInt(colorRect.attr('height'), 10) - 1,
 					labelText
 				)
 					.attr({
@@ -73,28 +89,40 @@ function(Snap,   Config,   Color) {
 						'font-size': Config.TEXT_SIZE_SMALL
 					});
 
-				var itemGroup = this.g(colorRect, title)
-					.data('fullText', data[i])
+				var itemGroup = this.node.g(colorRect, title)
+					.data('fullText', value[valueIndex])
 				
-				//truncated && itemGroup.hover(showFullText, hideFullText, itemGroup);
-
 				items.append(itemGroup);
-				columnOffset += parseInt(container.attr('width'), 10) / Config.KEY_COLUMNS;
-			}
+				columnOffset += this.columnWidth;
 
-			container.attr({
-				height: items.getBBox().height + Config.KEY_PADDING * (width * 1.5)
+			}.bind(this));
+
+			var itemsBBox = items.getBBox();
+			var containerBBox = this.container.getBBox();
+
+			this.container.attr({
+				height: itemsBBox.height + Config.KEY_PADDING * 2
 			});
 
-			items.addClass('fm-key-items');
+			if (this.centerItems === true) {
+				items.transform('t' + (containerBBox.width / 2 - itemsBBox.width / 2) + ' 0');
+			}
 
-			var key = this.g(container, items)
+			return this.node.g(this.container, items)
 				.addClass('fm-key')
 				.attr({
-					strokeDasharray: width + ',' + container.attr('height') + ',0,' + width + ',0'
+					strokeDasharray: this.width + ',' + containerBBox.height + ',0,' + this.width + ',0'
 				});
+		},
+		"show": function() {},
+		"setHeight": function(newHeight) {
+			var container = this.node.select('.fm-key-container');
 
-			return key;
-		};
-	});
+			container.attr({
+				height: newHeight + 'px'
+			});
+		}
+	};
+
+	return Key;
 });
