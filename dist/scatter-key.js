@@ -15,7 +15,7 @@ function(Snap,   Config,   Key,   Color) {
 	 */
 	function ScatterKey(paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength) {
 		
-		Key.call(paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength);
+		Key.call(this, paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength);
 
 	}
 
