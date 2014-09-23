@@ -17,5 +17,8 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "key": "https://git.assembla.com/descartes_diaphragm.key.git"
+  }
 }

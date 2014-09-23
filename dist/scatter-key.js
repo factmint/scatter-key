@@ -1,5 +1,5 @@
-define(['snap', 'config', 'color-utils'],
-function(Snap,   Config,   Color) {
+define(['snap', 'config', 'key', 'color-utils'],
+function(Snap,   Config,   Key,   Color) {
 	/**
 	 * Represents a key
 	 * @constructor
@@ -13,22 +13,14 @@ function(Snap,   Config,   Color) {
 	 * @param {Array.<string>} values
 	 * @param {Number} maxValues
 	 */
-	var Key = function(paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength) {
-		this._paper = paper;
-		this.node = paper.g();
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.columns = columns;
-		this.columnWidth = columnWidth;
-		this.centerItems = centerItems;
-		this.values = values;
-		this.maxValues = maxValues;
-		this.maxValueLength = maxValueLength;
+	function ScatterKey(paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength) {
+		
+		Key.call(paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength);
+
 	}
 
-	Key.prototype = {
-		"constructor": Key,
+	ScatterKey.prototype = {
+		"constructor": ScatterKey,
 		"hide": function() {},
 		"remove": function() {
 			this.node.parent.remove(this.node);
@@ -124,5 +116,5 @@ function(Snap,   Config,   Color) {
 		}
 	};
 
-	return Key;
+	return ScatterKey;
 });
