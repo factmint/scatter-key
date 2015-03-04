@@ -1,25 +1,25 @@
 define(['snap', 'config', 'key', 'color-utils'],
-function(Snap,   Config,   Key,   Color) {
-	/**
-	 * Represents a key
-	 * @constructor
-	 * @param {Snap} paper
-	 * @param {Number} x
-	 * @param {Number} y
-	 * @param {Number} width
-	 * @param {Number} columns
-	 * @param {Number} columnWidth
-	 * @param {String} alignment
-	 * @param {Array.<string>} values
-	 * @param {Number} maxValues
-	 */
-	function ScatterKey(paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength) {
-		
-		Key.call(this, paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength);
+function(Snap,   Config,   Key,  Color) {
+  /**
+   * Represents a key
+   * @constructor
+   * @param {Snap} paper
+   * @param {Number} x
+   * @param {Number} y
+   * @param {Number} width
+   * @param {Number} columns
+   * @param {Number} columnWidth
+   * @param {String} alignment
+   * @param {Array.<string>} values
+   * @param {Number} maxValues
+   */
+  function ScatterKey(paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength) {
+    
+    Key.call(this, paper, x, y, width, columns, columnWidth, centerItems, values, maxValues, maxValueLength);
 
-	}
+  }
 
-	ScatterKey.prototype = Object.create(Key.prototype);
+  ScatterKey.prototype = Object.create(Key.prototype);
 
   ScatterKey.prototype.constructor = ScatterKey;
 
@@ -40,35 +40,38 @@ function(Snap,   Config,   Key,   Color) {
         var trendItemLineContainerBBox = null;
         var colorClass = null;
 
-        trendlineData.forEach(function renderTrendlineKey(trendline) {
-
-          colorClass = trendline.data("colorClass");
-
+        trendlineData.forEach(function(trendline) {
           trendItem = paper.g();
-
           trendItemLineContainer = paper.rect(columnOffset, rowOffset + Config.KEY_PADDING, 13, 13)
             .attr("opacity", 0);
           trendItemLineContainerBBox = trendItemLineContainer.getBBox();
-          trendItemLine = paper.line(
-            trendItemLineContainerBBox.x,
-            trendItemLineContainerBBox.y + trendItemLineContainerBBox.height,
-            trendItemLineContainerBBox.x + trendItemLineContainerBBox.width,
-            trendItemLineContainerBBox.y
-          ).addClass('fm-trend-line ' + colorClass + ' with-stroke');
 
-          trendItemLabel = paper.text(
-            columnOffset + trendItemLineContainerBBox.width + Config.KEY_TEXT_SPACING + 1,
-            rowOffset + Config.KEY_PADDING + Config.TEXT_SIZE_SMALL,
-            trendline.data("correlationStrength")
-          ).attr({
-            "font-family": Config.FONT_FAMILY,
-            "font-size": Config.TEXT_SIZE_SMALL
-          }).addClass( colorClass );
+          if (trendline) {
+            colorClass = trendline.data("colorClass");
 
-          trendItem.append(trendItemLine);
-          trendItem.append(trendItemLabel);
+            trendItemLine = paper.line(
+              trendItemLineContainerBBox.x,
+              trendItemLineContainerBBox.y + trendItemLineContainerBBox.height,
+              trendItemLineContainerBBox.x + trendItemLineContainerBBox.width,
+              trendItemLineContainerBBox.y
+            ).addClass('fm-trend-line ' + colorClass + ' with-stroke');
 
-          trendDetails.append(trendItem);
+            trendItemLabel = paper.text(
+              columnOffset + trendItemLineContainerBBox.width + Config.KEY_TEXT_SPACING + 1,
+              rowOffset + Config.KEY_PADDING + Config.TEXT_SIZE_SMALL,
+              trendline.data("correlationStrength")
+            ).attr({
+              "font-family": Config.FONT_FAMILY,
+              "font-size": Config.TEXT_SIZE_SMALL
+            }).addClass( colorClass );
+
+            trendItem.append(trendItemLine);
+            trendItem.append(trendItemLabel);
+
+            trendDetails.append(trendItem);
+          } else {
+            trendItem.append(trendItemLineContainer);
+          }
 
           rowOffset += trendItem.getBBox().height + Config.KEY_ROWSPACING;
           trendItemLineContainer.remove();
@@ -94,5 +97,5 @@ function(Snap,   Config,   Key,   Color) {
 
     };
 
-	return ScatterKey;
+  return ScatterKey;
 });
